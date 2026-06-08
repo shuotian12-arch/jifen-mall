@@ -61,11 +61,8 @@
           <option value="redeemed">已核销</option>
           <option value="expired">已过期</option>
         </select>
-        <button @click="handleScan" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-          </svg>
-          扫码核销
+        <button @click="showVerifyModal = true" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+          输入核销码
         </button>
       </div>
 
@@ -111,27 +108,18 @@
         </table>
       </div>
 
-      <!-- 扫码核销弹窗 -->
-      <div v-if="showScanModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="showScanModal = false">
-        <div class="bg-white rounded-xl p-6 w-[600px]" @click.stop>
-          <h3 class="text-lg font-semibold mb-4">扫码核销</h3>
-          <div class="aspect-square bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-            <div class="text-center text-gray-400">
-              <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-              </svg>
-              <p>请将摄像头对准二维码</p>
-              <p class="text-sm mt-1">或输入核销码</p>
-            </div>
-          </div>
+      <!-- 核销码输入弹窗 -->
+      <div v-if="showVerifyModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="showVerifyModal = false">
+        <div class="bg-white rounded-xl p-6 w-[400px]" @click.stop>
+          <h3 class="text-lg font-semibold mb-4">输入核销码</h3>
           <input
             v-model="manualCode"
             type="text"
-            placeholder="输入核销码"
+            placeholder="请输入核销码"
             class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
           />
           <div class="flex gap-3">
-            <button @click="showScanModal = false" class="flex-1 py-2 border border-gray-200 rounded-lg text-gray-600">
+            <button @click="showVerifyModal = false" class="flex-1 py-2 border border-gray-200 rounded-lg text-gray-600">
               取消
             </button>
             <button @click="handleManualVerify" class="flex-1 py-2 bg-green-500 text-white rounded-lg">
@@ -153,7 +141,7 @@ const store = useStore()
 const redemptions = ref<Redemption[]>([...store.redemptions])
 const searchCode = ref('')
 const statusFilter = ref('')
-const showScanModal = ref(false)
+const showVerifyModal = ref(false)
 const manualCode = ref('')
 
 const statusLabels: Record<string, string> = {
@@ -187,10 +175,6 @@ const handleVerify = (order: Redemption) => {
   }
 }
 
-const handleScan = () => {
-  showScanModal.value = true
-}
-
 const handleManualVerify = () => {
   const order = redemptions.value.find(r => r.redemption_code === manualCode.value)
   if (order) {
@@ -199,7 +183,7 @@ const handleManualVerify = () => {
       return
     }
     handleVerify(order)
-    showScanModal.value = false
+    showVerifyModal.value = false
     manualCode.value = ''
   } else {
     alert('未找到该核销码')

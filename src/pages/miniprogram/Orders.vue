@@ -50,7 +50,6 @@
       <div class="bg-white rounded-2xl p-6 w-full max-w-sm" @click.stop>
         <h3 class="text-center font-semibold text-gray-800 mb-4">{{ selectedRedemption.product_name }}</h3>
         <div class="bg-gray-50 rounded-xl p-4 text-center">
-          <div ref="qrcodeRef" class="inline-block mb-3"></div>
           <div class="text-2xl font-mono font-bold text-gray-800">{{ selectedRedemption.redemption_code }}</div>
         </div>
         <div class="mt-4 text-center text-sm text-gray-500">
@@ -66,15 +65,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from '@/store'
 import type { Redemption } from '@/types'
-import QRCode from 'qrcode'
 
 const store = useStore()
 const redemptions = computed(() => store.redemptions)
 const selectedRedemption = ref<Redemption | null>(null)
-const qrcodeRef = ref<HTMLElement | null>(null)
 
 const statusLabels: Record<Redemption['status'], string> = {
   pending: '待核销',
@@ -88,17 +85,8 @@ const statusStyles: Record<Redemption['status'], string> = {
   expired: 'bg-red-100 text-red-500'
 }
 
-const showCode = async (item: Redemption) => {
+const showCode = (item: Redemption) => {
   if (item.status !== 'pending') return
   selectedRedemption.value = item
-  await nextTick()
-  if (qrcodeRef.value) {
-    QRCode.toCanvas(item.redemption_code, { width: 160 }, (err, canvas) => {
-      if (!err && qrcodeRef.value) {
-        qrcodeRef.value.innerHTML = ''
-        qrcodeRef.value.appendChild(canvas)
-      }
-    })
-  }
 }
 </script>
