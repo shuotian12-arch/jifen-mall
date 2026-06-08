@@ -1,16 +1,57 @@
-import type { User, PointsRecord, Product, Redemption, PointsRule, Admin } from '../types'
+import type { User, PointsRecord, Product, Redemption, PointsRule, Admin, OperationLog } from '../types'
 
-export const mockUser: User = {
-  user_id: 'u001',
-  openid: 'wx_openid_001',
-  nickname: '微信用户',
-  avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
-  phone: '138****8888',
-  register_time: '2026-06-01 10:00:00',
-  points: 250,
-  inviter_id: null,
-  has_first_checkin: true
-}
+export const mockUsers: User[] = [
+  {
+    user_id: 'u001',
+    openid: 'wx_openid_001',
+    nickname: '微信用户',
+    avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+    phone: '138****8888',
+    register_time: '2026-06-01 10:00:00',
+    points: 250,
+    inviter_id: null,
+    has_first_checkin: true,
+    status: 'active'
+  },
+  {
+    user_id: 'u002',
+    openid: 'wx_openid_002',
+    nickname: '小红',
+    avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTK7rPEBj5JYvO1WticicGAOmE0HGyxNzWxL0wTgYHT0dBGYHT0dBGYHT0dBGYHT0dBG/132',
+    phone: '139****1234',
+    register_time: '2026-06-02 14:00:00',
+    points: 180,
+    inviter_id: 'u001',
+    has_first_checkin: true,
+    status: 'active'
+  },
+  {
+    user_id: 'u003',
+    openid: 'wx_openid_003',
+    nickname: '小明',
+    avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJ8yQC1Kibj1u7GkJqPdVRjX6ib0PpU2gxeXDYolDQUeQQ/132',
+    phone: '137****5678',
+    register_time: '2026-06-03 09:30:00',
+    points: 60,
+    inviter_id: null,
+    has_first_checkin: true,
+    status: 'active'
+  },
+  {
+    user_id: 'u004',
+    openid: 'wx_openid_004',
+    nickname: '老王',
+    avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83er63uOO5OwC9h5MSeM0GF8cFJcX5OwC9h5MSeM0GF8cFJcX5OwC9h5MSe/132',
+    phone: '136****9999',
+    register_time: '2026-05-15 16:00:00',
+    points: 0,
+    inviter_id: null,
+    has_first_checkin: false,
+    status: 'deleted'
+  }
+]
+
+export const mockUser = mockUsers[0]
 
 export const mockPointsRecords: PointsRecord[] = [
   {
@@ -167,6 +208,18 @@ export const mockRedemptions: Redemption[] = [
     redeem_time: '2026-06-05 14:00:00',
     redeem_deadline: '2026-07-05 14:00:00',
     verify_time: '2026-06-06 16:30:00'
+  },
+  {
+    redemption_id: 'red003',
+    user_id: 'u002',
+    product_id: 'p002',
+    product_name: '定制笔记本',
+    points_used: 50,
+    redemption_code: 'RM20260606001',
+    status: 'pending',
+    redeem_time: '2026-06-06 11:00:00',
+    redeem_deadline: '2026-07-06 11:00:00',
+    verify_time: null
   }
 ]
 
@@ -183,5 +236,26 @@ export const mockAdmins: Admin[] = [
     role: 'super',
     status: 'active',
     create_time: '2026-05-01 10:00:00'
+  }
+]
+
+export const mockOperationLogs: OperationLog[] = [
+  {
+    log_id: 'log001',
+    operator_id: 'a001',
+    operator_name: 'admin',
+    operation_type: 'points_adjust',
+    target_user_id: 'u002',
+    detail: '调整积分 +50，原因：活动奖励',
+    created_at: '2026-06-05 15:00:00'
+  },
+  {
+    log_id: 'log002',
+    operator_id: 'a001',
+    operator_name: 'admin',
+    operation_type: 'points_transfer',
+    target_user_id: 'u003',
+    detail: '将用户 u004(136****9999) 的积分转移到 u003(137****5678)，转移积分：100',
+    created_at: '2026-06-06 10:30:00'
   }
 ]

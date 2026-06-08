@@ -63,7 +63,7 @@
           </div>
           <span class="text-gray-400 text-sm">{{ user.register_time }}</span>
         </div>
-        <div class="flex items-center justify-between p-4">
+        <div class="flex items-center justify-between p-4 border-b border-gray-50">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
               <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,6 +74,75 @@
           </div>
           <span class="text-green-500 text-sm">已签到</span>
         </div>
+        <button @click="showPhoneModal = true" class="w-full flex items-center justify-between p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </div>
+            <span class="text-gray-800">修改手机号</span>
+          </div>
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 修改手机号弹窗 -->
+    <div v-if="showPhoneModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click="showPhoneModal = false">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm" @click.stop>
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">修改手机号</h3>
+
+        <div v-if="phoneStep === 1" class="space-y-4">
+          <p class="text-sm text-gray-500 text-center">点击下方按钮，使用微信授权获取新手机号</p>
+          <button
+            @click="handleGetPhone"
+            class="w-full py-3 bg-green-500 text-white rounded-xl font-medium flex items-center justify-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            微信授权获取手机号
+          </button>
+        </div>
+
+        <div v-else-if="phoneStep === 2" class="space-y-4">
+          <div class="text-center py-4">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p class="text-gray-800 font-medium">新手机号</p>
+            <p class="text-2xl font-bold text-green-600 mt-2">{{ newPhone }}</p>
+          </div>
+          <div class="flex gap-3">
+            <button @click="phoneStep = 1; newPhone = ''" class="flex-1 py-3 border border-gray-200 rounded-xl text-gray-600">
+              重新获取
+            </button>
+            <button @click="handleConfirmPhone" class="flex-1 py-3 bg-green-500 text-white rounded-xl">
+              确认修改
+            </button>
+          </div>
+        </div>
+
+        <div v-else-if="phoneStep === 3" class="text-center py-6">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p class="text-gray-800 font-medium">手机号修改成功</p>
+          <button @click="showPhoneModal = false; phoneStep = 1; newPhone = ''" class="mt-4 w-full py-3 bg-gray-100 rounded-xl text-gray-600">
+            关闭
+          </button>
+        </div>
+
+        <button v-if="phoneStep !== 3" @click="showPhoneModal = false; phoneStep = 1; newPhone = ''" class="mt-4 w-full py-2 text-gray-400 text-sm">
+          取消
+        </button>
       </div>
     </div>
 
@@ -104,9 +173,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from '@/store'
 
 const store = useStore()
 const user = computed(() => store.user)
+const showPhoneModal = ref(false)
+const phoneStep = ref(1)
+const newPhone = ref('')
+
+const handleGetPhone = () => {
+  newPhone.value = '139****' + Math.floor(1000 + Math.random() * 9000)
+  phoneStep.value = 2
+}
+
+const handleConfirmPhone = () => {
+  if (store.changePhone(user.value.user_id, newPhone.value)) {
+    phoneStep.value = 3
+  } else {
+    alert('修改失败')
+  }
+}
 </script>

@@ -45,6 +45,29 @@
     <main class="ml-56 p-8">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-gray-800">用户管理</h2>
+        <button @click="showTransferModal = true" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          积分转移
+        </button>
+      </div>
+
+      <!-- 搜索栏 -->
+      <div class="bg-white rounded-xl p-4 mb-6 flex items-center gap-4">
+        <div class="flex-1">
+          <input
+            v-model="searchPhone"
+            type="text"
+            placeholder="输入手机号搜索"
+            class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+        <select v-model="statusFilter" class="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+          <option value="">全部状态</option>
+          <option value="active">正常</option>
+          <option value="deleted">已注销</option>
+        </select>
       </div>
 
       <!-- 用户表格 -->
@@ -55,13 +78,15 @@
               <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">用户ID</th>
               <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">昵称</th>
               <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">手机号</th>
+              <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">OpenID</th>
               <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">当前积分</th>
               <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">注册时间</th>
+              <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">状态</th>
               <th class="text-left px-6 py-3 text-sm font-medium text-gray-500">操作</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in users" :key="user.user_id" class="border-b border-gray-50">
+            <tr v-for="user in filteredUsers" :key="user.user_id" class="border-b border-gray-50">
               <td class="px-6 py-4 text-sm text-gray-600">{{ user.user_id }}</td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
@@ -71,16 +96,32 @@
               </td>
               <td class="px-6 py-4 text-sm text-gray-600">{{ user.phone }}</td>
               <td class="px-6 py-4">
+                <span class="text-xs text-gray-400 font-mono">{{ user.openid }}</span>
+              </td>
+              <td class="px-6 py-4">
                 <span class="text-orange-500 font-medium">{{ user.points }}</span>
               </td>
               <td class="px-6 py-4 text-sm text-gray-600">{{ user.register_time }}</td>
               <td class="px-6 py-4">
-                <button
-                  @click="openPointsModal(user)"
-                  class="px-3 py-1.5 border border-gray-200 text-gray-600 text-sm rounded hover:bg-gray-50"
-                >
-                  调整积分
-                </button>
+                <span :class="['px-2 py-1 rounded-full text-xs', user.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500']">
+                  {{ user.status === 'active' ? '正常' : '已注销' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <button
+                    @click="openPointsModal(user)"
+                    class="px-3 py-1.5 border border-gray-200 text-gray-600 text-sm rounded hover:bg-gray-50"
+                  >
+                    调整积分
+                  </button>
+                  <button
+                    @click="openDetailModal(user)"
+                    class="px-3 py-1.5 border border-gray-200 text-gray-600 text-sm rounded hover:bg-gray-50"
+                  >
+                    详情
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -88,7 +129,7 @@
       </div>
 
       <!-- 积分调整弹窗 -->
-      <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="showModal = false">
+      <div v-if="showPointsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="showPointsModal = false">
         <div class="bg-white rounded-xl p-6 w-96" @click.stop>
           <h3 class="text-lg font-semibold mb-4">调整积分 - {{ selectedUser?.nickname }}</h3>
           <div class="mb-4">
@@ -114,7 +155,7 @@
             />
           </div>
           <div class="flex gap-3">
-            <button @click="showModal = false" class="flex-1 py-2 border border-gray-200 rounded-lg text-gray-600">
+            <button @click="showPointsModal = false" class="flex-1 py-2 border border-gray-200 rounded-lg text-gray-600">
               取消
             </button>
             <button @click="handlePointsChange" class="flex-1 py-2 bg-green-500 text-white rounded-lg">
@@ -123,58 +164,258 @@
           </div>
         </div>
       </div>
+
+      <!-- 用户详情弹窗 -->
+      <div v-if="showDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="showDetailModal = false">
+        <div class="bg-white rounded-xl p-6 w-[600px] max-h-[80vh] overflow-y-auto" @click.stop>
+          <h3 class="text-lg font-semibold mb-4">用户详情 - {{ selectedUser?.nickname }}</h3>
+
+          <!-- 基本信息 -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="text-sm text-gray-500">用户ID</label>
+              <p class="text-gray-800">{{ selectedUser?.user_id }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-500">手机号</label>
+              <p class="text-gray-800">{{ selectedUser?.phone }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-500">OpenID</label>
+              <p class="text-gray-800 font-mono text-sm">{{ selectedUser?.openid }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-500">当前积分</label>
+              <p class="text-orange-500 font-medium">{{ selectedUser?.points }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-500">注册时间</label>
+              <p class="text-gray-800">{{ selectedUser?.register_time }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-500">状态</label>
+              <p :class="selectedUser?.status === 'active' ? 'text-green-500' : 'text-gray-500'">
+                {{ selectedUser?.status === 'active' ? '正常' : '已注销' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- 兑换记录 -->
+          <div class="mb-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">兑换记录</h4>
+            <div v-if="userRedemptions.length === 0" class="text-center text-gray-400 py-4">
+              暂无兑换记录
+            </div>
+            <div v-else class="space-y-2">
+              <div v-for="r in userRedemptions" :key="r.redemption_id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-sm font-medium text-gray-800">{{ r.product_name }}</p>
+                  <p class="text-xs text-gray-500">{{ r.redeem_time }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-orange-500">-{{ r.points_used }}</p>
+                  <span :class="['text-xs px-2 py-0.5 rounded', r.status === 'pending' ? 'bg-orange-100 text-orange-600' : r.status === 'redeemed' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500']">
+                    {{ r.status === 'pending' ? '待核销' : r.status === 'redeemed' ? '已核销' : '已过期' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button @click="showDetailModal = false" class="w-full mt-4 py-2 bg-gray-100 rounded-lg text-gray-600">
+            关闭
+          </button>
+        </div>
+      </div>
+
+      <!-- 积分转移弹窗 -->
+      <div v-if="showTransferModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="showTransferModal = false">
+        <div class="bg-white rounded-xl p-6 w-[500px]" @click.stop>
+          <h3 class="text-lg font-semibold mb-4">积分转移</h3>
+
+          <div v-if="transferStep === 1" class="space-y-4">
+            <div>
+              <label class="block text-sm text-gray-600 mb-2">旧手机号（源账号）</label>
+              <input
+                v-model="fromPhone"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="输入旧手机号"
+              />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-2">新手机号（目标账号）</label>
+              <input
+                v-model="toPhone"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="输入新手机号"
+              />
+            </div>
+            <button @click="handleSearchTransfer" class="w-full py-2 bg-green-500 text-white rounded-lg">
+              下一步
+            </button>
+          </div>
+
+          <div v-else-if="transferStep === 2" class="space-y-4">
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <p class="text-sm font-medium text-orange-800 mb-2">确认转移信息</p>
+              <div class="space-y-2 text-sm">
+                <p><span class="text-gray-500">源账号：</span>{{ fromUser?.phone }}（积分：{{ fromUser?.points }}）</p>
+                <p><span class="text-gray-500">目标账号：</span>{{ toUser?.phone }}（积分：{{ toUser?.points }}）</p>
+                <p class="text-orange-600 font-medium">转移积分：{{ fromUser?.points }}</p>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500">
+              转移后：
+            </p>
+            <ul class="text-xs text-gray-500 list-disc list-inside">
+              <li>源账号积分清零并标记为「已注销」</li>
+              <li>目标账号积分增加{{ fromUser?.points }}</li>
+              <li>源账号的所有历史积分记录和兑换记录将转移到目标账号</li>
+            </ul>
+            <div class="flex gap-3">
+              <button @click="transferStep = 1" class="flex-1 py-2 border border-gray-200 rounded-lg text-gray-600">
+                返回
+              </button>
+              <button @click="handleConfirmTransfer" class="flex-1 py-2 bg-orange-500 text-white rounded-lg">
+                确认转移
+              </button>
+            </div>
+          </div>
+
+          <div v-else-if="transferStep === 3" class="text-center py-6">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p class="text-gray-800 font-medium">积分转移成功</p>
+            <button @click="showTransferModal = false; resetTransfer()" class="mt-4 w-full py-3 bg-gray-100 rounded-xl text-gray-600">
+              关闭
+            </button>
+          </div>
+
+          <button v-if="transferStep !== 3" @click="showTransferModal = false; resetTransfer()" class="mt-4 w-full py-2 text-gray-400 text-sm">
+            取消
+          </button>
+        </div>
+      </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from '@/store'
-import type { User } from '@/types'
+import type { User, Redemption } from '@/types'
 
 const store = useStore()
-const users = ref<User[]>([
-  {
-    user_id: 'u001',
-    openid: 'wx_001',
-    nickname: '微信用户',
-    avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
-    phone: '138****8888',
-    register_time: '2026-06-01 10:00:00',
-    points: 250,
-    inviter_id: null,
-    has_first_checkin: true
-  },
-  {
-    user_id: 'u002',
-    openid: 'wx_002',
-    nickname: '小明',
-    avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
-    phone: '139****9999',
-    register_time: '2026-06-03 15:20:00',
-    points: 160,
-    inviter_id: 'u001',
-    has_first_checkin: true
-  }
-])
+const users = computed(() => store.users)
+const searchPhone = ref('')
+const statusFilter = ref('')
 
-const showModal = ref(false)
+const showPointsModal = ref(false)
+const showDetailModal = ref(false)
+const showTransferModal = ref(false)
 const selectedUser = ref<User | null>(null)
 const pointsChange = ref('')
 const reason = ref('')
+
+const transferStep = ref(1)
+const fromPhone = ref('')
+const toPhone = ref('')
+const fromUser = ref<User | null>(null)
+const toUser = ref<User | null>(null)
+
+const filteredUsers = computed(() => {
+  return users.value.filter(user => {
+    const matchPhone = !searchPhone.value || user.phone.includes(searchPhone.value)
+    const matchStatus = !statusFilter.value || user.status === statusFilter.value
+    return matchPhone && matchStatus
+  })
+})
+
+const userRedemptions = computed(() => {
+  if (!selectedUser.value) return []
+  return store.getUserRedemptions(selectedUser.value.user_id)
+})
 
 const openPointsModal = (user: User) => {
   selectedUser.value = user
   pointsChange.value = ''
   reason.value = ''
-  showModal.value = true
+  showPointsModal.value = true
+}
+
+const openDetailModal = (user: User) => {
+  selectedUser.value = user
+  showDetailModal.value = true
 }
 
 const handlePointsChange = () => {
   if (!selectedUser.value || !pointsChange.value) return
   const change = parseInt(pointsChange.value)
   store.adjustUserPoints(selectedUser.value.user_id, change, reason.value)
-  selectedUser.value.points += change
-  showModal.value = false
+  const user = users.value.find(u => u.user_id === selectedUser.value?.user_id)
+  if (user) user.points += change
+  showPointsModal.value = false
+}
+
+const resetTransfer = () => {
+  transferStep.value = 1
+  fromPhone.value = ''
+  toPhone.value = ''
+  fromUser.value = null
+  toUser.value = null
+}
+
+const handleSearchTransfer = () => {
+  if (!fromPhone.value || !toPhone.value) {
+    alert('请输入两个手机号')
+    return
+  }
+
+  fromUser.value = users.value.find(u => u.phone === fromPhone.value)
+  toUser.value = users.value.find(u => u.phone === toPhone.value)
+
+  if (!fromUser.value) {
+    alert('未找到源账号')
+    return
+  }
+  if (!toUser.value) {
+    alert('未找到目标账号')
+    return
+  }
+  if (fromUser.value.user_id === toUser.value.user_id) {
+    alert('不能转移到自己')
+    return
+  }
+  if (fromUser.value.status === 'deleted') {
+    alert('源账号已注销')
+    return
+  }
+  if (toUser.value.status === 'deleted') {
+    alert('目标账号已注销')
+    return
+  }
+
+  transferStep.value = 2
+}
+
+const handleConfirmTransfer = () => {
+  if (!fromUser.value || !toUser.value) return
+
+  if (!confirm(`确认将 ${fromUser.value.phone} 的 ${fromUser.value.points} 积分转移到 ${toUser.value.phone}？`)) {
+    return
+  }
+
+  const result = store.transferPoints(fromUser.value.user_id, toUser.value.user_id)
+
+  if (result.success) {
+    transferStep.value = 3
+  } else {
+    alert(result.message)
+  }
 }
 </script>

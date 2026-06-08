@@ -8,12 +8,13 @@ export interface User {
   points: number
   inviter_id: string | null
   has_first_checkin: boolean
+  status: 'active' | 'inactive' | 'deleted'
 }
 
 export interface PointsRecord {
   record_id: string
   user_id: string
-  type: 'register' | 'checkin' | 'invite' | 'redeem' | 'manual'
+  type: 'register' | 'checkin' | 'invite' | 'redeem' | 'manual' | 'phone_change'
   value: number
   balance: number
   time: string
@@ -54,4 +55,15 @@ export interface Admin {
   role: 'super' | 'operation' | 'service'
   status: 'active' | 'inactive'
   create_time: string
+}
+
+export interface OperationLog {
+  log_id: string
+  operator_id: string
+  operator_name: string
+  operation_type: 'points_adjust' | 'points_transfer' | 'user_edit' | 'user_status_change' | 'phone_change'
+  target_user_id?: string
+  target_order_id?: string
+  detail: string
+  created_at: string
 }
