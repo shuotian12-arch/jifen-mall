@@ -63,7 +63,7 @@ export const useStore = defineStore('main', {
       }
     },
 
-    adjustUserPoints(userId: string, value: number, reason: string) {
+    adjustUserPoints(userId: string, value: number, _reason: string) {
       if (userId === this.user.user_id) {
         this.addPoints(value, 'manual')
       }
