@@ -1,0 +1,137 @@
+# 数据库初始化脚本 - 请按顺序导入
+
+## 1. points_rules 集合
+
+在「数据库 → points_rules → 添加记录」中复制粘贴：
+
+```json
+{
+  "_id": "default",
+  "rule_id": "default",
+  "register_bonus": 100,
+  "daily_checkin": 10,
+  "invite_bonus": 50,
+  "update_time": 1717833600000
+}
+```
+
+---
+
+## 2. admins 集合
+
+在「数据库 → admins → 添加记录」中复制粘贴：
+
+```json
+{
+  "_id": "admin001",
+  "admin_id": "admin001",
+  "username": "admin",
+  "password_hash": "admin123",
+  "role": "super",
+  "status": "active",
+  "create_time": 1717833600000,
+  "last_login_time": null
+}
+```
+
+---
+
+## 3. products 集合（可选 - 测试商品）
+
+```json
+{
+  "_id": "p001",
+  "product_id": "p001",
+  "name": "精美咖啡杯",
+  "image": "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400",
+  "points_required": 100,
+  "stock": 50,
+  "status": "active",
+  "expiry_date": "2026-12-31",
+  "description": "优质陶瓷咖啡杯",
+  "create_time": 1717833600000,
+  "update_time": 1717833600000
+}
+```
+
+```json
+{
+  "_id": "p002",
+  "product_id": "p002",
+  "name": "定制笔记本",
+  "image": "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=400",
+  "points_required": 50,
+  "stock": 100,
+  "status": "active",
+  "expiry_date": "2026-12-31",
+  "description": "精美定制笔记本",
+  "create_time": 1717833600000,
+  "update_time": 1717833600000
+}
+```
+
+```json
+{
+  "_id": "p003",
+  "product_id": "p003",
+  "name": "便携充电宝",
+  "image": "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400",
+  "points_required": 200,
+  "stock": 30,
+  "status": "active",
+  "expiry_date": "2026-12-31",
+  "description": "10000mAh便携充电宝",
+  "create_time": 1717833600000,
+  "update_time": 1717833600000
+}
+```
+
+---
+
+## 4. users 集合（可选 - 测试用户）
+
+```json
+{
+  "_id": "u001",
+  "user_id": "u001",
+  "openid": "wx_openid_test_001",
+  "unionid": "",
+  "nickname": "测试用户",
+  "avatar": "https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132",
+  "phone": "138****8888",
+  "register_time": 1717833600000,
+  "points": 250,
+  "inviter_id": null,
+  "has_first_checkin": true,
+  "status": "active",
+  "create_time": 1717833600000,
+  "update_time": 1717833600000
+}
+```
+
+```json
+{
+  "_id": "u002",
+  "user_id": "u002",
+  "openid": "wx_openid_test_002",
+  "unionid": "",
+  "nickname": "小红",
+  "avatar": "https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132",
+  "phone": "139****1234",
+  "register_time": 1717920000000,
+  "points": 180,
+  "inviter_id": "u001",
+  "has_first_checkin": true,
+  "status": "active",
+  "create_time": 1717920000000,
+  "update_time": 1717920000000
+}
+```
+
+---
+
+## 注意事项
+
+- `_id` 字段可以留空，云开发会自动生成
+- 时间戳是毫秒级，对应 2024-06-08
+- password_hash 目前是明文 "admin123"，生产环境应加密
